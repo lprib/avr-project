@@ -1,18 +1,8 @@
-
-// #define F_CPU 16000000
-
-#include <avr/io.h>
-// #include <util/delay.h>
-#include "awo.h"
+#include "display.h"
+#include <stdbool.h>
 
 int main(void) {
-    DDRB = 0xFF;
-    for(;;) {
-      do_flash();
-    // _delay_ms(100);
-    delay_test();
-    PORTB = 0;
-    delay_test();
-    // _delay_ms(200);
-    }
+  display_init();
+  display_console_init(true, true);
+  display_console_write(0, 0, "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 }

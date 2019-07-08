@@ -24,8 +24,12 @@ if [ "$1" = "build" ]; then
     avr-gcc $CompilerFlags main.o $OFilesWithoutMain -o main.out -lm
     avr-size main.out
 elif [ "$1" = "program" ]; then
+    #use 'export SerialPort=/dev/ttyUSBx' in shell if on something other than ttyUSB0
+    if [ -z "$SerialPort" ]; then
+        $SerialPort="/dev/ttyUSB0"
+    fi
     avr-objcopy -O ihex ./out/main.out ./out/main.hex
-    avrdude -p $McuAvrdude -c arduino -P /dev/ttyUSB0 -b 115200 -U flash:w:./out/main.hex
+    avrdude -p $McuAvrdude -c arduino -P $SerialPort -b 115200 -U flash:w:./out/main.hex
 elif [ "$1" = "clean" ]; then
     rm out/*
 elif [ "$1" = "run" ]; then
