@@ -24,7 +24,7 @@ if [ "$1" = "build" ]; then
     avr-gcc $CompilerFlags main.o $OFilesWithoutMain -o main.out -lm
     avr-size main.out
 elif [ "$1" = "program" ]; then
-    #use 'export SerialPort=/dev/ttyUSBx' in shell if on something other than ttyUSB0
+    # use 'export SerialPort=/dev/ttyUSBx' in shell if on something other than ttyUSB0
     if [ -z "$SerialPort" ]; then
         $SerialPort="/dev/ttyUSB0"
     fi
