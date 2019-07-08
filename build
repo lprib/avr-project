@@ -1,0 +1,37 @@
+#!/bin/bash
+
+McuGcc="atmega328p"
+McuAvrdude="m328p"
+
+if [ "$1" = "build" ]; then
+    CompilerFlags="-mmcu=$McuGcc -std=c99 -I../src -I. -O3"
+
+    # relative to the out directory
+    SourceDir="../src/"
+
+    mkdir -p out
+    cd out
+    # for each .c file in the src directory, compile it to a .o file
+    for File in ${SourceDir}*.c
+    do
+        avr-gcc $CompilerFlags -c $File -o $(basename $File .c).o
+    done
+
+    # each .o file excluding main.o (because it needs to come first in the arguments to avr-gcc)
+    OFilesWithoutMain=$(find . -maxdepth 1 -type f -name "*.o" ! -name "main.o")
+
+    # link all .o files
+    avr-gcc $CompilerFlags main.o $OFilesWithoutMain -o main.out -lm
+    avr-size main.out
+elif [ "$1" = "program" ]; then
+    avr-objcopy -O ihex ./out/main.out ./out/main.hex
+    avrdude -p $McuAvrdude -c arduino -P /dev/ttyUSB0 -b 115200 -U flash:w:./out/main.hex
+elif [ "$1" = "clean" ]; then
+    rm out/*
+elif [ "$1" = "run" ]; then
+    ./build clean
+    ./build build
+    ./build program
+else
+    echo "expected action type as a parameter"
+fi
