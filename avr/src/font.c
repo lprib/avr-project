@@ -1,5 +1,5 @@
-unsigned char* font = {
-  //  
+unsigned char font[] = {
+  //
   0b000,
   0b000,
   0b000,
@@ -221,4 +221,4 @@ unsigned char* font = {
   0b011,
   0b001,
   0b110
-}
+};

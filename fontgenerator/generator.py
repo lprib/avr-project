@@ -12,10 +12,11 @@ CHARACTERS = " abcdefghijklmnopqrstuvwxyz0123456789"
 ON_CHARACTER = "0"
 # character denoting an "off" pixel
 OFF_CHARACTER = "."
+# used to indent when emitting c code
 INDENT = "  "
 
 l = open(FONT_FILENAME).readlines();
-print("unsigned char* font = {")
+print("unsigned char font[] = {")
 
 for index, char in enumerate(CHARACTERS):
     print(INDENT + "// {}".format(char))
@@ -33,4 +34,4 @@ for index, char in enumerate(CHARACTERS):
             print()
         else:
             print(",")
-print("}")
+print("};")
