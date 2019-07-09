@@ -1,5 +1,5 @@
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef PIN_H
+#define PIN_H
 
 #include <avr/io.h>
 #include <stdbool.h>

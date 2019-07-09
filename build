@@ -26,7 +26,7 @@ if [ "$1" = "build" ]; then
 elif [ "$1" = "program" ]; then
     # use 'export SerialPort=/dev/ttyUSBx' in shell if on something other than ttyUSB0
     if [ -z "$SerialPort" ]; then
-        $SerialPort="/dev/ttyUSB0"
+        SerialPort="/dev/ttyUSB0"
     fi
     avr-objcopy -O ihex ./out/main.out ./out/main.hex
     avrdude -p $McuAvrdude -c arduino -P $SerialPort -b 115200 -U flash:w:./out/main.hex
