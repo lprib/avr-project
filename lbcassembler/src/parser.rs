@@ -93,7 +93,7 @@ fn element(i: &str) -> IResult<&str, Element> {
 
 fn comment(i: &str) -> IResult<&str, ()> {
     let (i, _) = bytes::complete::tag("#")(i)?;
-    let (i, _) = combinator::not(character::complete::line_ending)(i)?;
+    let (i, _) = character::complete::not_line_ending(i)?;
     Ok((i, ()))
 }
 
@@ -107,6 +107,27 @@ fn line(i: &str) -> IResult<&str, Option<Element>> {
     }
 }
 
+fn newline(i: &str) -> IResult<&str, ()> {
+    let (i, _) = character::complete::space0(i)?;
+    let (i, _) = character::complete::line_ending(i)?;
+    let (i, _) = character::complete::space0(i)?;
+    Ok((i, ()))
+}
+
+// may not consume all input
+fn program_maybe(i: &str) -> IResult<&str, Vec<Element>> {
+    let (i, _) = character::complete::multispace0(i)?;
+    let (i, element_options) = multi::separated_list(multi::many1(newline), line)(i)?;
+    let (i, _) = character::complete::multispace0(i)?;
+
+    let elements: Vec<Element> = element_options.into_iter().filter_map(|x| x).collect();
+
+    Ok((i, elements))
+}
+
+fn program(i: &str) -> IResult<&str, Vec<Element>> {
+    combinator::all_consuming(program_maybe)(i)
+}
 
 #[cfg(test)]
 mod tests {
@@ -147,8 +168,8 @@ mod tests {
 
     #[test]
     fn test_comment() {
-        let (rem, _) = comment("# Here is a comment").unwrap();
-        // assert_eq!(rem, "\n");
+        let (rem, _) = comment("# Here is a comment\nmore").unwrap();
+        assert_eq!(rem, "\nmore");
     }
 
     #[test]
@@ -170,5 +191,27 @@ mod tests {
 
         let (_, res) = line("LabelName123:").unwrap();
         assert_eq!(res, Some(Element::Label("LabelName123")));
+    }
+
+    #[test]
+    fn test_program() {
+        let (_rem, _res) = program(
+            "
+
+        labelName:
+            pushconst 34
+
+
+            pushconst [labelName]
+        # Henlo
+
+            asd123:
+            pushconst [asd123]
+
+        ",
+        )
+        .unwrap();
+        // println!("{:#?}", res);
+        //TODO assert that _res is the correct ast
     }
 }
