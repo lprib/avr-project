@@ -16,15 +16,20 @@ lazy_static! {
 }
 
 #[derive(Debug, PartialEq)]
-enum Element<'a> {
+pub enum Element<'a> {
     Label(&'a str),
     OpCode(&'a OpCode<'a>, Vec<Argument<'a>>),
 }
 
 #[derive(Debug, PartialEq)]
-enum Argument<'a> {
+pub enum Argument<'a> {
     Value(u16),
     LabelAddress(&'a str),
+}
+
+// On error, returns (remaining_input, nom_error) tuple
+pub fn parse_program(input: &str) -> Result<Vec<Element>, nom::Err<(&str, nom::error::ErrorKind)>> {
+    program(input).map(|(_, vec)| vec)
 }
 
 // creates a new vec, so needs to return String not &str

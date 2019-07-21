@@ -1,0 +1,10 @@
+
+labelName:
+    pushconst 34
+
+
+    pushconst [labelName]
+# Henlo
+
+    asd123:
+    pushconst [asd123]
