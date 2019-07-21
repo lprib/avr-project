@@ -22,6 +22,7 @@ pub fn load_opcode_list(data: &str) -> Result<HashMap<&str, OpCode>, ()> {
         map.insert(opcode.name.clone(), opcode);
     }
 
+    //TODO use all_comsuming combinator for this instead
     if !i.is_empty() {
         // all input should be consumed, else error
         Err(())

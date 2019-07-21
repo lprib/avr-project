@@ -31,6 +31,8 @@ enum Argument<'a> {
 fn label_name(i: &str) -> IResult<&str, &str> {
     // TODO: include underscore as well
     character::complete::alphanumeric1(i)
+    // this only takes one character...how to fold into a str:
+    // character::complete::one_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")(i)
 }
 
 fn decimal_literal(i: &str) -> IResult<&str, u16> {
@@ -78,6 +80,34 @@ fn opcode_element(i: &str) -> IResult<&str, Element> {
     Ok((i, Element::OpCode(opcode, args)))
 }
 
+fn label_element(i: &str) -> IResult<&str, Element> {
+    let (i, name) = label_name(i)?;
+    let (i, _) = bytes::complete::tag(":")(i)?;
+
+    Ok((i, Element::Label(name)))
+}
+
+fn element(i: &str) -> IResult<&str, Element> {
+    branch::alt((opcode_element, label_element))(i)
+}
+
+fn comment(i: &str) -> IResult<&str, ()> {
+    let (i, _) = bytes::complete::tag("#")(i)?;
+    let (i, _) = combinator::not(character::complete::line_ending)(i)?;
+    Ok((i, ()))
+}
+
+fn line(i: &str) -> IResult<&str, Option<Element>> {
+    let (i, maybe_comment) = combinator::opt(comment)(i)?;
+    match maybe_comment {
+        Some(_) => Ok((i, None)),
+        None => combinator::map_res(element, |elem| -> Result<Option<Element>, ()> {
+            Ok(Some(elem))
+        })(i),
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -98,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_space_and_arg() {
-        let (rem, res) = space_and_argument("    [label]").unwrap();
+        let (_, res) = space_and_argument("    [label]").unwrap();
         assert_eq!(res, Argument::LabelAddress("label"));
     }
 
@@ -106,12 +136,39 @@ mod tests {
     fn test_opcode_element() {
         // NOTE relies on a working opcode parser
         // and the fact that pushconst has one bytecode argument
-        let (rem, res) = opcode_element("pushconst [hello]").unwrap();
+        let (_, res) = opcode_element("pushconst [hello]").unwrap();
         let expected_opcode = OPCODES_MAP.get("pushconst").unwrap();
 
         assert_eq!(
             res,
             Element::OpCode(&expected_opcode, vec![Argument::LabelAddress("hello")])
         );
+    }
+
+    #[test]
+    fn test_comment() {
+        let (rem, _) = comment("# Here is a comment").unwrap();
+        // assert_eq!(rem, "\n");
+    }
+
+    #[test]
+    fn test_line() {
+        // comments
+        let (_, res) = line("# A Comment").unwrap();
+        assert_eq!(res, None);
+
+        // opcodes
+        let (_, res) = line("pushconst [hello]").unwrap();
+        let expected_opcode = OPCODES_MAP.get("pushconst").unwrap();
+        assert_eq!(
+            res,
+            Some(Element::OpCode(
+                &expected_opcode,
+                vec![Argument::LabelAddress("hello")]
+            ))
+        );
+
+        let (_, res) = line("LabelName123:").unwrap();
+        assert_eq!(res, Some(Element::Label("LabelName123")));
     }
 }
