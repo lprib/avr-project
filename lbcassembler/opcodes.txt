@@ -1,10 +1,2 @@
-add A5 3
-
-
-
-sub 01
-
-
-push 02 2
-
-
+add 00
+pushconst 01 1

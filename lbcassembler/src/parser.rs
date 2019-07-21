@@ -4,16 +4,18 @@ use nom::*;
 
 use core::result::Result::Ok;
 use std::collections::HashMap;
-use std::num::ParseIntError;
+use std::fs;
 
 lazy_static! {
-    static ref OPCODES_MAP: HashMap<&'static str, OpCode<'static>> = {
-        load_opcode_list("/home/liam/programming/avr-project/lbcassembler/opcodes.txt")
-            .expect("Error loading opcode list...")
+    static ref OPCODES_MAP_STRING: String = {
+        fs::read_to_string("/home/liam/programming/avr-project/lbcassembler/opcodes.txt")
+            .expect("cant read opcode list file")
     };
+    static ref OPCODES_MAP: HashMap<&'static str, OpCode<'static>> =
+        { load_opcode_list(&OPCODES_MAP_STRING).expect("error parsing opcode list") };
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Element<'a> {
     Label(&'a str),
     OpCode(&'a OpCode<'a>, Vec<Argument<'a>>),
@@ -27,7 +29,7 @@ enum Argument<'a> {
 
 // creates a new vec, so needs to return String not &str
 fn label_name(i: &str) -> IResult<&str, &str> {
-    //TODO: include underscore as well
+    // TODO: include underscore as well
     character::complete::alphanumeric1(i)
 }
 
@@ -67,8 +69,11 @@ fn space_and_argument(i: &str) -> IResult<&str, Argument> {
 
 fn opcode_element(i: &str) -> IResult<&str, Element> {
     let (i, opcode) = opcode_name(i)?;
-    let (i, _) = character::complete::space1(i)?;
-    let (i, args) = multi::many_m_n(opcode.expected_args, opcode.expected_args, space_and_argument)(i)?;
+    let (i, args) = multi::many_m_n(
+        opcode.expected_args,
+        opcode.expected_args,
+        space_and_argument,
+    )(i)?;
 
     Ok((i, Element::OpCode(opcode, args)))
 }
@@ -89,5 +94,24 @@ mod tests {
         let (rem, res) = argument_label_address("[LabelName32]").unwrap();
         assert_eq!(rem, "");
         assert_eq!(res, Argument::LabelAddress("LabelName32"));
+    }
+
+    #[test]
+    fn test_space_and_arg() {
+        let (rem, res) = space_and_argument("    [label]").unwrap();
+        assert_eq!(res, Argument::LabelAddress("label"));
+    }
+
+    #[test]
+    fn test_opcode_element() {
+        // NOTE relies on a working opcode parser
+        // and the fact that pushconst has one bytecode argument
+        let (rem, res) = opcode_element("pushconst [hello]").unwrap();
+        let expected_opcode = OPCODES_MAP.get("pushconst").unwrap();
+
+        assert_eq!(
+            res,
+            Element::OpCode(&expected_opcode, vec![Argument::LabelAddress("hello")])
+        );
     }
 }

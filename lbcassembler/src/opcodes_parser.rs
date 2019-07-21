@@ -4,7 +4,7 @@ use std::collections::HashMap;
 /// Format: <name> <opcode value in hex> [expected number of args]
 /// if not specified, expected number of args is 0
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct OpCode<'a> {
     pub name: &'a str,
     pub code: u8,
@@ -13,7 +13,7 @@ pub struct OpCode<'a> {
 
 /// produces a HashMap<opcode_name, opcode_struct> from a string of opcode specifications
 pub fn load_opcode_list(data: &str) -> Result<HashMap<&str, OpCode>, ()> {
-    let (i, opcode_vec) = parse_opcode_file(data).map_err(|_| {
+    let (i, opcode_vec) = parse_opcode_file(&data).map_err(|_| {
         // println!("{:?}", error);
         ()
     })?;
@@ -23,7 +23,7 @@ pub fn load_opcode_list(data: &str) -> Result<HashMap<&str, OpCode>, ()> {
     }
 
     if !i.is_empty() {
-        //all input should be consumed, else error
+        // all input should be consumed, else error
         Err(())
     } else {
         Ok(map)
