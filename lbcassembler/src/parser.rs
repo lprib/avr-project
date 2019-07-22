@@ -1,9 +1,10 @@
 use super::opcodes_parser::{load_opcode_list, OpCode};
-use lazy_static::lazy_static;
-use nom::*;
 
-use core::result::Result::Ok;
 use std::collections::HashMap;
+use core::result::Result::Ok;
+use lazy_static::lazy_static;
+use nom::character::complete::*;
+use nom::*;
 use std::fs;
 
 lazy_static! {
@@ -35,13 +36,13 @@ pub fn parse_program(input: &str) -> Result<Vec<Element>, nom::Err<(&str, nom::e
 // creates a new vec, so needs to return String not &str
 fn label_name(i: &str) -> IResult<&str, &str> {
     // TODO: include underscore as well
-    character::complete::alphanumeric1(i)
+    alphanumeric1(i)
     // this only takes one character...how to fold into a str:
-    // character::complete::one_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")(i)
+    // one_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")(i)
 }
 
 fn decimal_literal(i: &str) -> IResult<&str, u16> {
-    combinator::map_res(character::complete::digit1, |strn: &str| strn.parse())(i)
+    combinator::map_res(digit1, |strn: &str| strn.parse())(i)
 }
 
 fn str_to_opcode(i: &str) -> Result<&OpCode, ()> {
@@ -49,7 +50,7 @@ fn str_to_opcode(i: &str) -> Result<&OpCode, ()> {
 }
 
 fn opcode_name(i: &str) -> IResult<&str, &OpCode> {
-    combinator::map_res(character::complete::alpha0, str_to_opcode)(i)
+    combinator::map_res(alpha0, str_to_opcode)(i)
 }
 
 fn argument_decimal_literal(i: &str) -> IResult<&str, Argument> {
@@ -70,7 +71,7 @@ fn argument_label_address(i: &str) -> IResult<&str, Argument> {
 }
 
 fn space_and_argument(i: &str) -> IResult<&str, Argument> {
-    let (i, _) = character::complete::space1(i)?;
+    let (i, _) = space1(i)?;
     branch::alt((argument_label_address, argument_decimal_literal))(i)
 }
 
@@ -98,7 +99,7 @@ fn element(i: &str) -> IResult<&str, Element> {
 
 fn comment(i: &str) -> IResult<&str, ()> {
     let (i, _) = bytes::complete::tag("#")(i)?;
-    let (i, _) = character::complete::not_line_ending(i)?;
+    let (i, _) = not_line_ending(i)?;
     Ok((i, ()))
 }
 
@@ -113,17 +114,17 @@ fn line(i: &str) -> IResult<&str, Option<Element>> {
 }
 
 fn newline(i: &str) -> IResult<&str, ()> {
-    let (i, _) = character::complete::space0(i)?;
-    let (i, _) = character::complete::line_ending(i)?;
-    let (i, _) = character::complete::space0(i)?;
+    let (i, _) = space0(i)?;
+    let (i, _) = line_ending(i)?;
+    let (i, _) = space0(i)?;
     Ok((i, ()))
 }
 
 // may not consume all input
 fn program_maybe(i: &str) -> IResult<&str, Vec<Element>> {
-    let (i, _) = character::complete::multispace0(i)?;
+    let (i, _) = multispace0(i)?;
     let (i, element_options) = multi::separated_list(multi::many1(newline), line)(i)?;
-    let (i, _) = character::complete::multispace0(i)?;
+    let (i, _) = multispace0(i)?;
 
     let elements: Vec<Element> = element_options.into_iter().filter_map(|x| x).collect();
 

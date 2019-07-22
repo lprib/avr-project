@@ -1,6 +1,9 @@
+mod assembler;
 mod opcodes_parser;
 mod parser;
 
+
+use assembler::gen_code;
 use parser::parse_program;
 
 use std::fs;
@@ -10,6 +13,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use structopt::clap::arg_enum;
 use structopt::StructOpt;
+
 arg_enum! {
     #[derive(Debug)]
     enum OutputType {
@@ -41,16 +45,17 @@ fn main() {
     };
 
     let input_string = fs::read_to_string(opt.input).expect("unable to read input file");
+    let ast = parse_program(&input_string).expect("unable to parse");
 
     match opt.emit {
         Some(OutputType::Ast) => {
             //todo better error messages
-            let ast = parse_program(&input_string).expect("unable to parse");
             write!(&mut output, "{:#?}", ast).expect("Unable to write AST to output file");
         }
         // test on None as well since this should be the default
         Some(OutputType::ByteCode) | None => {
-            println!("Not yet implemented");
+            let code = gen_code(&ast);
+            println!("{:?}", code.data);
         }
     }
 }
