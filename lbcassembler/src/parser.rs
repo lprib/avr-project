@@ -24,10 +24,10 @@ pub fn parse_program(input: &str) -> Result<Vec<Element>, nom::Err<(&str, nom::e
 
 // creates a new vec, so needs to return String not &str
 fn label_name(i: &str) -> IResult<&str, &str> {
-    // TODO: include underscore as well
-    alphanumeric1(i)
-    // this only takes one character...how to fold into a str:
-    // one_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")(i)
+    combinator::recognize(multi::many1(branch::alt((
+        bytes::complete::tag("_"),
+        alphanumeric1,
+    ))))(i)
 }
 
 fn decimal_literal(i: &str) -> IResult<&str, u16> {
@@ -82,8 +82,56 @@ fn label_element(i: &str) -> IResult<&str, Element> {
     Ok((i, Element::Label(name)))
 }
 
+fn string_literal(i: &str) -> IResult<&str, &str> {
+    sequence::delimited(
+        bytes::complete::tag("\""),
+        combinator::recognize(multi::many0(none_of("\""))),
+        bytes::complete::tag("\""),
+    )(i)
+}
+
+fn from_hex(i: &str) -> Result<u8, std::num::ParseIntError> {
+    u8::from_str_radix(i, 16)
+}
+
+fn is_hex_digit(i: char) -> bool {
+    i.is_digit(16)
+}
+
+fn hex_literal(i: &str) -> IResult<&str, Vec<u8>> {
+    multi::many1(combinator::map_res(
+        bytes::complete::take_while_m_n(2, 2, is_hex_digit),
+        from_hex,
+    ))(i)
+}
+
+fn string_raw_value(i: &str) -> IResult<&str, Element> {
+    let (i, _) = bytes::complete::tag(".string")(i)?;
+    let (i, _) = space1(i)?;
+    let (i, string) = string_literal(i)?;
+
+    println!("{}", string);
+
+    let mut out_vec = Vec::new();
+    out_vec.extend_from_slice(string.as_bytes());
+
+    Ok((i, Element::RawData(out_vec)))
+}
+
+fn hex_raw_value(i: &str) -> IResult<&str, Element> {
+    let (i, _) = bytes::complete::tag(".hex")(i)?;
+    let (i, _) = space1(i)?;
+    let (i, out_vec) = hex_literal(i)?;
+
+    Ok((i, Element::RawData(out_vec)))
+}
+
+fn raw_value(i: &str) -> IResult<&str, Element> {
+    branch::alt((string_raw_value, hex_raw_value))(i)
+}
+
 fn element(i: &str) -> IResult<&str, Element> {
-    branch::alt((opcode_element, label_element))(i)
+    branch::alt((opcode_element, label_element, raw_value))(i)
 }
 
 fn comment(i: &str) -> IResult<&str, ()> {
@@ -110,7 +158,7 @@ fn newline(i: &str) -> IResult<&str, ()> {
 }
 
 // may not consume all input
-fn program_maybe(i: &str) -> IResult<&str, Vec<Element>> {
+fn program_nonconsuming(i: &str) -> IResult<&str, Vec<Element>> {
     let (i, _) = multispace0(i)?;
     let (i, element_options) = multi::separated_list(multi::many1(newline), line)(i)?;
     let (i, _) = multispace0(i)?;
@@ -121,7 +169,7 @@ fn program_maybe(i: &str) -> IResult<&str, Vec<Element>> {
 }
 
 fn program(i: &str) -> IResult<&str, Vec<Element>> {
-    combinator::all_consuming(program_maybe)(i)
+    combinator::all_consuming(program_nonconsuming)(i)
 }
 
 #[cfg(test)]
@@ -130,16 +178,16 @@ mod tests {
 
     #[test]
     fn test_label_name() {
-        let (remaining, result) = label_name("abcDEF123abc more").unwrap();
+        let (remaining, result) = label_name("abcDEF1_23abc more").unwrap();
         assert_eq!(remaining, " more");
-        assert_eq!(result, "abcDEF123abc");
+        assert_eq!(result, "abcDEF1_23abc");
     }
 
     #[test]
     fn test_label_address() {
-        let (rem, res) = argument_label_address("[LabelName32]").unwrap();
+        let (rem, res) = argument_label_address("[Label_Name32]").unwrap();
         assert_eq!(rem, "");
-        assert_eq!(res, Argument::LabelAddress("LabelName32"));
+        assert_eq!(res, Argument::LabelAddress("Label_Name32"));
     }
 
     #[test]
@@ -168,6 +216,27 @@ mod tests {
     }
 
     #[test]
+    fn hex_raw() {
+        let (_, res) = hex_raw_value(".hex FF00AABC").unwrap();
+        assert_eq!(res, Element::RawData(vec![0xFF, 0x00, 0xAA, 0xBC]));
+    }
+
+    #[test]
+    fn test_string_literal() {
+        let (_, res) = string_literal("\"Hi There\"").unwrap();
+        assert_eq!(res, "Hi There");
+    }
+
+    #[test]
+    fn string_raw() {
+        let (_, res) = string_raw_value(".string \"hello\"").expect("ohs hit");
+        match res {
+            Element::RawData(data) => assert_eq!(&*data, "hello".as_bytes()),
+            _ => panic!(),
+        }
+    }
+
+    #[test]
     fn test_line() {
         // comments
         let (_, res) = line("# A Comment").unwrap();
@@ -192,6 +261,10 @@ mod tests {
     fn test_program() {
         let (_rem, _res) = program(
             "
+
+            .hex 0123456789ABCDEF
+
+            .string \"string here asd\"
 
         labelName:
             pushconst 34

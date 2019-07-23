@@ -2,12 +2,13 @@ use super::structures::{Argument, Element};
 
 use std::collections::HashMap;
 
-//TODO move opcode, arg, element into different modules
 impl Element<'_> {
-    fn bytecode_size(&self) -> usize {
+    //can only use u16 for size due to 16 bit stack element and argument size
+    fn bytecode_size(&self) -> u16 {
         match &self {
             Element::Label(_) => 0,
-            Element::OpCode(opcode, _) => 1 + 2 * opcode.expected_args,
+            Element::OpCode(opcode, _) => 1 + 2 * opcode.expected_args as u16,
+            Element::RawData(data) => data.len() as u16,
         }
     }
 }
@@ -30,13 +31,16 @@ pub fn gen_code(ast: &[Element]) -> ByteCode {
                     bytecode.append(&mut to_bytecode(arg, &label_table));
                 }
             }
+            Element::RawData(data) => {
+                bytecode.extend(data);
+            }
         }
     }
 
     ByteCode { data: bytecode }
 }
 
-fn gen_label_table<'a>(ast: &'a [Element]) -> HashMap<&'a str, usize> {
+fn gen_label_table<'a>(ast: &'a [Element]) -> HashMap<&'a str, u16> {
     let mut label_table = HashMap::new();
 
     let mut bytecode_index = 0;
@@ -52,13 +56,13 @@ fn gen_label_table<'a>(ast: &'a [Element]) -> HashMap<&'a str, usize> {
     label_table
 }
 
-fn to_bytecode(argument: &Argument, label_table: &HashMap<&str, usize>) -> Vec<u8> {
+fn to_bytecode(argument: &Argument, label_table: &HashMap<&str, u16>) -> Vec<u8> {
     match argument {
         Argument::Value(n) => to_byte_vec(*n),
         Argument::LabelAddress(name) => to_byte_vec(
             *label_table
                 .get(name)
-                .expect(&format!("unknown label: {}", name)) as u16,
+                .expect(&format!("unknown label: {}", name)),
         ),
     }
 }

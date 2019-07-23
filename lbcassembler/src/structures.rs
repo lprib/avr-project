@@ -9,6 +9,7 @@ pub struct OpCode<'a> {
 pub enum Element<'a> {
     Label(&'a str),
     OpCode(&'a OpCode<'a>, Vec<Argument<'a>>),
+    RawData(Vec<u8>),
 }
 
 #[derive(Debug, PartialEq)]

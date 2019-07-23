@@ -1,3 +1,6 @@
+.hex FF00AA07
+.string "hello"
+
 
 labelName:
     pushconst 569
