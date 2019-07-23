@@ -1,6 +1,7 @@
 mod assembler;
 mod opcodes_parser;
 mod parser;
+mod structures;
 
 
 use assembler::gen_code;

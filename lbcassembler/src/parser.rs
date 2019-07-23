@@ -1,10 +1,11 @@
-use super::opcodes_parser::{load_opcode_list, OpCode};
+use super::opcodes_parser::load_opcode_list;
+use super::structures::{Argument, Element, OpCode};
 
-use std::collections::HashMap;
 use core::result::Result::Ok;
 use lazy_static::lazy_static;
 use nom::character::complete::*;
 use nom::*;
+use std::collections::HashMap;
 use std::fs;
 
 lazy_static! {
@@ -14,18 +15,6 @@ lazy_static! {
     };
     static ref OPCODES_MAP: HashMap<&'static str, OpCode<'static>> =
         { load_opcode_list(&OPCODES_MAP_STRING).expect("error parsing opcode list") };
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Element<'a> {
-    Label(&'a str),
-    OpCode(&'a OpCode<'a>, Vec<Argument<'a>>),
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Argument<'a> {
-    Value(u16),
-    LabelAddress(&'a str),
 }
 
 // On error, returns (remaining_input, nom_error) tuple

@@ -1,4 +1,4 @@
-use super::parser::{Argument, Element};
+use super::structures::{Argument, Element};
 
 use std::collections::HashMap;
 

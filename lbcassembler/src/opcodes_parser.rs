@@ -1,15 +1,10 @@
+use super::structures::OpCode;
+
 use nom::*;
 use std::collections::HashMap;
 
 /// Format: <name> <opcode value in hex> [expected number of args]
 /// if not specified, expected number of args is 0
-
-#[derive(Debug, PartialEq)]
-pub struct OpCode<'a> {
-    pub name: &'a str,
-    pub code: u8,
-    pub expected_args: usize,
-}
 
 /// produces a HashMap<opcode_name, opcode_struct> from a string of opcode specifications
 pub fn load_opcode_list(data: &str) -> Result<HashMap<&str, OpCode>, ()> {
