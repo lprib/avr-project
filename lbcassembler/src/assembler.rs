@@ -62,7 +62,7 @@ fn to_bytecode(argument: &Argument, label_table: &HashMap<&str, u16>) -> Vec<u8>
         Argument::LabelAddress(name) => to_byte_vec(
             *label_table
                 .get(name)
-                .expect(&format!("unknown label: {}", name)),
+                .unwrap_or_else(|| panic!("unknwon label: {}", name)),
         ),
     }
 }

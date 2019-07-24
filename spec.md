@@ -1,8 +1,19 @@
 ## Opcodes
 ### loading/storing
-- 0x00 `pushaddress address` pushes 16 bits at address to stack
-- 0x01 `pushconst constant` pushes constant (immediate value) to stack
-- 0x02 `popinto address` pops the top stack value and stores it at address
-- 0x03 `store stack_index address` stores the value `stack_index` slots from the stack pointer into address
-### jumps
-- 0x
+- `push <value>`
+- `pushref <address>`
+- `store <address>` pop top stack value into address
+- `swap` swap top stack values
+- `fetch <n>` swap the nth value from the top of the stack with the value at the top of the stack
+- `pushoffset <address> <offset>` push the value \<offset\> bytes after \<address\>
+- `storeoffset <address> <offset>` store the top stack value to the location \<offset\> bytes after \<address\>
+- 
+
+### Math ops
+Self explanatory. Do operations on the top 1 or 2 stack values.
+
+### Jump ops
+General form `jumpxx <address>`. Jump to \<address\> if the top 1 or 2 stack values satisfy the condition xx.
+
+## IO
+- `syscall <number>` executes the specified syscall with args on the stack.

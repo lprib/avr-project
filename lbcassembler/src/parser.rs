@@ -110,8 +110,6 @@ fn string_raw_value(i: &str) -> IResult<&str, Element> {
     let (i, _) = space1(i)?;
     let (i, string) = string_literal(i)?;
 
-    println!("{}", string);
-
     let mut out_vec = Vec::new();
     out_vec.extend_from_slice(string.as_bytes());
 
@@ -126,8 +124,16 @@ fn hex_raw_value(i: &str) -> IResult<&str, Element> {
     Ok((i, Element::RawData(out_vec)))
 }
 
+fn zeroes_raw_value(i: &str) -> IResult<&str, Element> {
+    let (i, _) = bytes::complete::tag(".zeros")(i)?;
+    let (i, _) = space1(i)?;
+    let (i, size) = decimal_literal(i)?;
+
+    Ok((i, Element::RawData(vec![0; size as usize])))
+}
+
 fn raw_value(i: &str) -> IResult<&str, Element> {
-    branch::alt((string_raw_value, hex_raw_value))(i)
+    branch::alt((string_raw_value, hex_raw_value, zeroes_raw_value))(i)
 }
 
 fn element(i: &str) -> IResult<&str, Element> {
@@ -199,9 +205,9 @@ mod tests {
     #[test]
     fn test_opcode_element() {
         // NOTE relies on a working opcode parser
-        // and the fact that pushconst has one bytecode argument
-        let (_, res) = opcode_element("pushconst [hello]").unwrap();
-        let expected_opcode = OPCODES_MAP.get("pushconst").unwrap();
+        // and the fact that push has one bytecode argument
+        let (_, res) = opcode_element("push [hello]").unwrap();
+        let expected_opcode = OPCODES_MAP.get("push").unwrap();
 
         assert_eq!(
             res,
@@ -243,8 +249,8 @@ mod tests {
         assert_eq!(res, None);
 
         // opcodes
-        let (_, res) = line("pushconst [hello]").unwrap();
-        let expected_opcode = OPCODES_MAP.get("pushconst").unwrap();
+        let (_, res) = line("push [hello]").unwrap();
+        let expected_opcode = OPCODES_MAP.get("push").unwrap();
         assert_eq!(
             res,
             Some(Element::OpCode(
@@ -267,14 +273,14 @@ mod tests {
             .string \"string here asd\"
 
         labelName:
-            pushconst 34
+            push 34
 
 
-            pushconst [labelName]
+            push [labelName]
         # Henlo
 
             asd123:
-            pushconst [asd123]
+            push [asd123]
 
         ",
         )

@@ -10,11 +10,10 @@ use std::collections::HashMap;
 pub fn load_opcode_list(data: &str) -> Result<HashMap<&str, OpCode>, ()> {
     let (i, opcode_vec) = parse_opcode_file(&data).map_err(|_| {
         // println!("{:?}", error);
-        ()
     })?;
     let mut map = HashMap::new();
     for opcode in opcode_vec {
-        map.insert(opcode.name.clone(), opcode);
+        map.insert(opcode.name, opcode);
     }
 
     //TODO use all_comsuming combinator for this instead

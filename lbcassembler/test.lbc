@@ -1,13 +1,14 @@
 .hex FF00AA07
 .string "hello"
 
+.zeros 20
 
 labelName:
-    pushconst 569
+    push 569
 
 
-    pushconst [labelName]
+    push [labelName]
 # Henlo
 
     asd123:
-    pushconst [asd123]
+    push [asd123]

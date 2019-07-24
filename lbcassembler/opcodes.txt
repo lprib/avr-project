@@ -1,2 +1,26 @@
-add 00
-pushconst 01 1
+push		00	1
+pushref		01	1
+store		02	1
+swap		03
+fetch		04	1
+pushoffset	05	2
+storeoffset	06	2
+deref		07
+
+add			20
+sub			21
+mul			22
+div			23
+mod			24
+inc			25
+dec			26
+
+jump		40	1
+jumpz		41	1
+jumpnz		42	1
+jumplt		43	1
+jumpgt		44	1
+jumple		45	1
+jumpge		46	1
+
+syscall		50	1
