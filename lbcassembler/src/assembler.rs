@@ -1,4 +1,4 @@
-use super::structures::{Argument, Element};
+use super::structures::{Argument, Element, ByteCode};
 
 use std::collections::HashMap;
 
@@ -13,10 +13,6 @@ impl Element<'_> {
     }
 }
 
-pub struct ByteCode {
-    pub data: Vec<u8>,
-}
-
 pub fn gen_code(ast: &[Element]) -> ByteCode {
     let label_table = gen_label_table(ast);
 
@@ -24,7 +20,7 @@ pub fn gen_code(ast: &[Element]) -> ByteCode {
 
     for element in ast {
         match element {
-            Element::Label(_) => {}
+            Element::Label(_) => { /* Maybe add a debug tag or something here*/ }
             Element::OpCode(opcode, args) => {
                 bytecode.push(opcode.code);
                 for arg in args {

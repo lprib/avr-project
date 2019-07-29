@@ -15,5 +15,7 @@ Self explanatory. Do operations on the top 1 or 2 stack values.
 ### Jump ops
 General form `jumpxx <address>`. Jump to \<address\> if the top 1 or 2 stack values satisfy the condition xx.
 
-## IO
+### IO
 - `syscall <number>` executes the specified syscall with args on the stack.
+
+## Syscalls

@@ -1,12 +1,13 @@
 mod assembler;
+mod formatter;
 mod opcodes_parser;
-mod parser;
 mod structures;
-
+mod parser;
 
 use assembler::gen_code;
-use parser::parse_program;
 
+use formatter::{format_bytecode, C_FORMAT_SPEC};
+use parser::parse_program;
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -19,7 +20,9 @@ arg_enum! {
     #[derive(Debug)]
     enum OutputType {
         Ast,
-        ByteCode
+        PrettyAst,
+        ByteCode,
+        CByteCode,
     }
 }
 
@@ -51,12 +54,24 @@ fn main() {
     match opt.emit {
         Some(OutputType::Ast) => {
             //todo better error messages
-            write!(&mut output, "{:#?}", ast).expect("Unable to write AST to output file");
+            writeln!(&mut output, "{:?}", ast).expect("Unable to write AST to output file");
+        }
+
+        Some(OutputType::PrettyAst) => {
+            writeln!(&mut output, "{:#?}", ast).expect("Unable to write AST to output file");
         }
         // test on None as well since this should be the default
         Some(OutputType::ByteCode) | None => {
             let code = gen_code(&ast);
-            println!("{:?}", code.data);
+            for byte in code.data {
+                write!(&mut output, "{} ", byte).expect("unable to write to output");
+            }
+            writeln!(&mut output).expect("unable to write to output");
+        }
+
+        Some(OutputType::CByteCode) => {
+            let code = gen_code(&ast);
+            write!(&mut output, "{}", format_bytecode(code, &C_FORMAT_SPEC)).expect("unable to write to output");
         }
     }
 }

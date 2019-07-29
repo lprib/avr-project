@@ -1,14 +1,15 @@
 .hex FF00AA07
 .string "hello"
 
+buffer:
 .zeros 20
 
 labelName:
     push 569
 
 
-    push [labelName]
+    push [buffer]
 # Henlo
 
     asd123:
-    push [asd123]
+    push [buffer]

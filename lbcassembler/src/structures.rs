@@ -17,3 +17,7 @@ pub enum Argument<'a> {
     Value(u16),
     LabelAddress(&'a str),
 }
+
+pub struct ByteCode {
+    pub data: Vec<u8>,
+}
