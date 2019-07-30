@@ -1,7 +1,7 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 pub struct OpCode<'a> {
-    pub name: &'a str,
     pub code: u8,
+    pub name: &'a str,
     pub expected_args: usize,
 }
 

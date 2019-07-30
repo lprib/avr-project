@@ -13,7 +13,7 @@ lazy_static! {
         fs::read_to_string("/home/liam/programming/avr-project/lbcassembler/opcodes.txt")
             .expect("cant read opcode list file")
     };
-    static ref OPCODES_MAP: HashMap<&'static str, OpCode<'static>> =
+    pub static ref OPCODES_MAP: HashMap<&'static str, OpCode<'static>> =
         { load_opcode_list(&OPCODES_MAP_STRING).expect("error parsing opcode list") };
 }
 

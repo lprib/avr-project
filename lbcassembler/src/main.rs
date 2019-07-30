@@ -1,13 +1,13 @@
 mod assembler;
 mod formatter;
 mod opcodes_parser;
-
 mod parser;
 mod structures;
-use assembler::gen_code;
 
+use assembler::gen_code;
 use formatter::{format_bytecode, C_FORMAT_SPEC};
 use parser::parse_program;
+
 use std::fmt;
 use std::fs;
 use std::fs::File;
@@ -16,6 +16,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use structopt::clap::arg_enum;
 use structopt::StructOpt;
+use itertools::Itertools;
 
 
 arg_enum! {
@@ -25,6 +26,7 @@ arg_enum! {
         PrettyAst,
         ByteCode,
         CByteCode,
+        COpCodes
     }
 }
 
@@ -38,7 +40,7 @@ struct Opt {
     emit: Option<OutputType>,
 
     #[structopt(name = "input-file", parse(from_os_str), help = "Input File")]
-    input: PathBuf,
+    input: Option<PathBuf>,
 }
 
 fn try_main<'a>() -> Result<(), (&'a str, impl fmt::Debug)> {
@@ -50,7 +52,26 @@ fn try_main<'a>() -> Result<(), (&'a str, impl fmt::Debug)> {
         None => Box::new(io::stdout()),
     };
 
-    let input_string = fs::read_to_string(opt.input).err_message("unable to read input file")?;
+    if let Some(OutputType::COpCodes) = opt.emit {
+        for opcode in parser::OPCODES_MAP.values().sorted() {
+            writeln!(
+                &mut output,
+                "#define {} {}",
+                opcode.name.to_uppercase(),
+                opcode.code
+            )
+            .err_message("unable to write opcodes to output file")?;
+        }
+
+        return Ok(());
+    }
+
+    let input = opt.input.ok_or((
+        "Must include input file",
+        io::Error::from(io::ErrorKind::NotFound),
+    ))?;
+
+    let input_string = fs::read_to_string(input).err_message("unable to read input file")?;
     //TODO why tf err_message not working here:
     let ast = parse_program(&input_string).expect("couldn't parse");
 
@@ -78,6 +99,10 @@ fn try_main<'a>() -> Result<(), (&'a str, impl fmt::Debug)> {
             write!(&mut output, "{}", format_bytecode(code, &C_FORMAT_SPEC))
                 .err_message("unable to write to output")?;
         }
+
+        Some(OutputType::COpCodes) => {
+            panic!("This should not happen (opcodes should be handled before this");
+        }
     }
     Ok(())
 }
@@ -100,6 +125,7 @@ fn main() {
         Err((message, err)) => {
             eprintln!("ERROR: {}", message);
             eprintln!("{:?}", err);
+            std::process::exit(1);
         }
     }
 }
