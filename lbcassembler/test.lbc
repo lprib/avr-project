@@ -1,15 +1,4 @@
-.hex FF00AA07
-.string "hello"
-
-buffer:
-.zeros 20
-
-labelName:
-    push 569
-
-
-    push [buffer]
-# Henlo
-
-    asd123:
-    push [buffer]
+push 399
+push 21
+add
+syscall 0

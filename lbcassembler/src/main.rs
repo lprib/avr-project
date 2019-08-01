@@ -18,7 +18,6 @@ use structopt::clap::arg_enum;
 use structopt::StructOpt;
 use itertools::Itertools;
 
-
 arg_enum! {
     #[derive(Debug)]
     enum OutputType {
@@ -53,10 +52,11 @@ fn try_main<'a>() -> Result<(), (&'a str, impl fmt::Debug)> {
     };
 
     if let Some(OutputType::COpCodes) = opt.emit {
+        //TODO abstract this maybe?
         for opcode in parser::OPCODES_MAP.values().sorted() {
             writeln!(
                 &mut output,
-                "#define {} {}",
+                "#define OP_{} 0x{:02X}",
                 opcode.name.to_uppercase(),
                 opcode.code
             )

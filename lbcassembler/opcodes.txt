@@ -6,6 +6,8 @@ fetch		04	1
 pushoffset	05	2
 storeoffset	06	2
 deref		07
+fetchlocal  08  1
+fetcharg    09  1
 
 add			20
 sub			21
@@ -22,5 +24,7 @@ jumplt		43	1
 jumpgt		44	1
 jumple		45	1
 jumpge		46	1
+call        47  1
+return      48
 
 syscall		50	1

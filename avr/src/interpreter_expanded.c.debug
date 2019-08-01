@@ -1,0 +1,96 @@
+# 1 "src/interpreter.c"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 31 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 32 "<command-line>" 2
+# 1 "src/interpreter.c"
+# 18 "src/interpreter.c"
+void
+run_program(program_t* program)
+{
+  unsigned int stack_index = 0;
+  unsigned int instr_index = 0;
+  unsigned int locals_index = 0;
+
+  bool do_loop = true;
+  while (do_loop) {
+    unsigned char code = program->bytecode[instr_index];
+    usart_write_int_line(instr_index);
+    instr_index++;
+
+    switch (code) {
+      case OP_PUSH:;
+
+        stackval_t val = next_bytecode_val(program->bytecode, &instr_index);
+        stack_push(program->stack, &stack_index, val);
+        break;
+      case OP_SYSCALL:;
+
+        stackval_t syscall_num =
+          next_bytecode_val(program->bytecode, &instr_index);
+        syscalls[syscall_num](program, &stack_index);
+        break;
+
+      case OP_ADD:
+        stack_index -= 1;
+        stackval_t OP_ADD_val =
+          program->stack[stack_index] + program->stack[stack_index] + 1;
+        program->stack[stack_index] = OP_ADD_val;
+        break;
+      case OP_SUB:
+        stack_index -= 1;
+        stackval_t OP_SUB_val =
+          program->stack[stack_index] - program->stack[stack_index] + 1;
+        program->stack[stack_index] = OP_SUB_val;
+        break;
+      case OP_MUL:
+        stack_index -= 1;
+        stackval_t OP_MUL_val =
+          program->stack[stack_index] * program->stack[stack_index] + 1;
+        program->stack[stack_index] = OP_MUL_val;
+        break;
+      case OP_DIV:
+        stack_index -= 1;
+        stackval_t OP_DIV_val =
+          program->stack[stack_index] / program->stack[stack_index] + 1;
+        program->stack[stack_index] = OP_DIV_val;
+        break;
+      case OP_MOD:
+        stack_index -= 1;
+        stackval_t OP_MOD_val =
+          program->stack[stack_index] % program->stack[stack_index] + 1;
+        program->stack[stack_index] = OP_MOD_val;
+        break;
+      default:
+        break;
+    }
+
+    if (instr_index >= program->bytecode_size) {
+      usart_wait_write('r');
+      return;
+    }
+  }
+}
+
+stackval_t
+next_bytecode_val(unsigned char* bytecode, unsigned int* instr_index)
+{
+  stackval_t ret = (bytecode[*instr_index] << 8) + (bytecode[*instr_index + 1]);
+  *instr_index += 2;
+  return ret;
+}
+
+stackval_t
+stack_pop(stackval_t* stack, unsigned int* stack_index)
+{
+  *stack_index--;
+  return stack[(*stack_index) + 1];
+}
+
+void
+stack_push(stackval_t* stack, unsigned int* stack_index, stackval_t value)
+{
+  *stack_index++;
+  stack[*stack_index] = value;
+}
