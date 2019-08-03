@@ -1,4 +1,21 @@
-push 399
-push 21
-add
+index:
+.hex 0A
+
+load8 [index]
+dup
+syscall 0
+syscall 0
+
+main:
+    load8 [index]
+    push 1
+    sub
+    dup
+    syscall 0
+    dup
+    store8 [index]
+    jumpz [main]
+
+
+push 10
 syscall 0

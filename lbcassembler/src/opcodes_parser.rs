@@ -26,7 +26,7 @@ pub fn load_opcode_list(data: &str) -> Result<HashMap<&str, OpCode>, ()> {
 }
 
 fn parse_ident(i: &str) -> IResult<&str, &str> {
-    character::complete::alpha1(i)
+    character::complete::alphanumeric1(i)
 }
 
 fn hex_to_u8(digits: &str) -> Result<u8, std::num::ParseIntError> {

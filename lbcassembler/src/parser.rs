@@ -39,7 +39,7 @@ fn str_to_opcode(i: &str) -> Result<&OpCode, ()> {
 }
 
 fn opcode_name(i: &str) -> IResult<&str, &OpCode> {
-    combinator::map_res(alpha0, str_to_opcode)(i)
+    combinator::map_res(alphanumeric0, str_to_opcode)(i)
 }
 
 fn argument_decimal_literal(i: &str) -> IResult<&str, Argument> {

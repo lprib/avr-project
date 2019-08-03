@@ -1,13 +1,17 @@
 push		00	1
-pushref		01	1
-store		02	1
-swap		03
-fetch		04	1
-pushoffset	05	2
-storeoffset	06	2
-deref		07
-fetchlocal  08  1
-fetcharg    09  1
+load8		01	1
+load16      02  1
+store8  	03	1
+store16     04  1
+swap		05
+fetch		06	1
+pushoffset	07	2
+storeoffset	08	2
+deref		09
+fetchlocal  0A  1
+fetcharg    0B  1
+drop        0C
+dup         0D
 
 add			20
 sub			21
